@@ -4,7 +4,7 @@ using System.Linq;
 
 public static class Utils {
 
-    private static System.Random rng = new System.Random();
+    public static System.Random rng = new System.Random();
 
     public static T getRandomElement<T>(this IEnumerable<T> list) {
         return list.OrderBy(i => rng.Next()).First();
