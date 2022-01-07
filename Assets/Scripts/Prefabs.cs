@@ -10,7 +10,7 @@ public class Prefabs : MonoBehaviour {
     public List<GameObject> tracks = new List<GameObject>();
 
     public void Start() {
-        stations = Enumerable.Range(0, 0).Select(i => Resources.Load<GameObject>($"Prefabs/Stations/Station{i}")).ToList();
+        stations = Enumerable.Range(0, 1).Select(i => Resources.Load<GameObject>($"Prefabs/Stations/Station{i}")).ToList();
         tracks = Enumerable.Range(0, 2).Select(i => Resources.Load<GameObject>($"Prefabs/Tracks/Track{i}")).ToList();
     }
 }

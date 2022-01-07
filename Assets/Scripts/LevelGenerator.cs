@@ -16,7 +16,9 @@ public class LevelGenerator : MonoBehaviour {
         _prefabs = GetComponent<Prefabs>();
         _datastore = GetComponent<Datastore>();
 
-        generatedTracks = GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform);
+        generatedTracks = GenerateNewTracks(1, _prefabs.stations, grid.transform);
+        generatedTracks.AddRange(GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform));
+        generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.stations, grid.transform));
         var nextTrackPositions = CalculateTrackPositions(grid.transform.position.x, generatedTracks);
         for (int i = 0; i < generatedTracks.Count; i++) {
             generatedTracks[i].transform.position = nextTrackPositions[i];
@@ -39,8 +41,8 @@ public class LevelGenerator : MonoBehaviour {
         tracksToDelete.ForEach(Destroy);
         generatedTracks = generatedTracks.Skip(tracksToDelete.Count).ToList();
         
-        var tracksToAdd = GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform);
-        generatedTracks.AddRange(tracksToAdd);
+        generatedTracks.AddRange(GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform));
+        generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.stations, grid.transform));
         
         var originTrack = generatedTracks.First().transform;
         var nextTrackPositions = CalculateTrackPositions(originTrack.position.x, generatedTracks);
