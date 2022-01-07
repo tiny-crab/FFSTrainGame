@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using UniRx;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -11,44 +12,48 @@ public class LevelGenerator : MonoBehaviour {
 
     public int trackBufferSize = 6;
     public List<GameObject> generatedTracks;
+    public double trainRerenderBoundary = 0;
 
     public void Start() {
         _prefabs = GetComponent<Prefabs>();
         _datastore = GetComponent<Datastore>();
 
         generatedTracks = GenerateNewTracks(1, _prefabs.stations, grid.transform);
-        generatedTracks.AddRange(GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform));
-        generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.stations, grid.transform));
-        var nextTrackPositions = CalculateTrackPositions(grid.transform.position.x, generatedTracks);
-        for (int i = 0; i < generatedTracks.Count; i++) {
-            generatedTracks[i].transform.position = nextTrackPositions[i];
-        }
+        CreateNextTrackSet();
+        _datastore.nextStation = generatedTracks.FindLast(track => track.name.Contains("Station"));
+
+        _datastore.distToNextStation.Where(dist => dist <= -15).Subscribe(_ => {
+            _datastore.nextStation = generatedTracks.FindLast(track => track.name.Contains("Station"));
+        });
     }
 
     public void Update() {
-        // Get the second-to-last track origin
-        var trainRerenderBoundary = generatedTracks.Skip(generatedTracks.Count - 2).First().transform.position.x;
         if (_datastore.train.transform.position.x > trainRerenderBoundary) {
-            RecycleTracks();
+            CleanUpTracks();
+            CreateNextTrackSet();
         }
     }
 
-    public void RecycleTracks() {
+    public void CreateNextTrackSet() {
+        generatedTracks.AddRange(GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform));
+        generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.stations, grid.transform));
+
+        var originTrack = generatedTracks.First().transform;
+        var nextTrackPositions = CalculateTrackPositions(originTrack.position.x, generatedTracks);
+        for (int i = 0; i < generatedTracks.Count; i++) {
+            generatedTracks[i].transform.position = nextTrackPositions[i];
+        }
+        // Get the second-to-last track origin
+        trainRerenderBoundary = generatedTracks.Skip(generatedTracks.Count - 2).First().transform.position.x;
+    }
+
+    public void CleanUpTracks() {
         // we want to only delete the tracks that are out of view. The train will be on the boundary between the second-to-last
         // and last tracks at the moment we recycle. So we want to avoid deleting the second-to-last right in front of the player.
         // TODO could delete and add as the camera moves
         var tracksToDelete = generatedTracks.Take(generatedTracks.Count - 2).ToList();
         tracksToDelete.ForEach(Destroy);
         generatedTracks = generatedTracks.Skip(tracksToDelete.Count).ToList();
-        
-        generatedTracks.AddRange(GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform));
-        generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.stations, grid.transform));
-        
-        var originTrack = generatedTracks.First().transform;
-        var nextTrackPositions = CalculateTrackPositions(originTrack.position.x, generatedTracks);
-        for (int i = 0; i < generatedTracks.Count; i++) {
-            generatedTracks[i].transform.position = nextTrackPositions[i];
-        }
     }
 
     private static List<GameObject> GenerateNewTracks(int total, List<GameObject> possibleTracks, Transform parent) {
