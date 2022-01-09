@@ -255,6 +255,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   velocity: 0
   friction: 0.1
+  cars: []
 --- !u!1 &401514500
 GameObject:
   m_ObjectHideFlags: 0

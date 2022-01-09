@@ -10,7 +10,8 @@ public class LevelGenerator : MonoBehaviour {
 
     public Grid grid;
 
-    public int trackBufferSize = 6;
+    public int trackBufferSize = 3;
+    public int numGates = 1;
     public List<GameObject> generatedTracks;
     public double trainRerenderBoundary = 0;
 
@@ -35,7 +36,11 @@ public class LevelGenerator : MonoBehaviour {
     }
 
     public void CreateNextTrackSet() {
-        generatedTracks.AddRange(GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform));
+        Enumerable.Range(0, numGates).ToList().ForEach(i => {
+            generatedTracks.AddRange(GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform));
+            generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.gates, grid.transform));
+        });
+        
         generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.stations, grid.transform));
 
         var originTrack = generatedTracks.First().transform;
