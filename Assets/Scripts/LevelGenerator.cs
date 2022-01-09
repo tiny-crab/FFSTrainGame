@@ -16,6 +16,7 @@ public class LevelGenerator : MonoBehaviour {
     public List<GameObject> generatedTracks;
     public double endOfTracksetTrigger = 0;
     public int trackActivationBuffer = 3;
+    public IntReactiveProperty currentTrackIndex = new IntReactiveProperty(0);
 
     public void Start() {
         _prefabs = GetComponent<Prefabs>();
@@ -28,6 +29,23 @@ public class LevelGenerator : MonoBehaviour {
         _datastore.distToNextStation.Where(dist => dist <= -15).Subscribe(_ => {
             _datastore.nextStation = generatedTracks.FindLast(track => track.name.Contains("Station"));
         });
+
+        currentTrackIndex.Subscribe(newVal => {
+            var tracksToDelete = generatedTracks.Take(Math.Max(newVal - trackActivationBuffer, 0)).ToList();
+            var tracksToActivate = generatedTracks.Skip(newVal + 1).Take(trackActivationBuffer).ToList();
+            var tracksToDeactivate = generatedTracks.Skip(newVal + 1 + trackActivationBuffer).ToList();
+        
+            tracksToDelete.ForEach(track => {
+                generatedTracks.Remove(track);
+                Destroy(track);
+            });
+            tracksToActivate.ForEach(track => {
+                track.SetActive(true);
+            });
+            tracksToDeactivate.ForEach(track => {
+                track.SetActive(false);
+            });
+        });
     }
 
     public void Update() {
@@ -37,19 +55,9 @@ public class LevelGenerator : MonoBehaviour {
 
         var trainNose = _datastore.train.transform.Find("Nose").position.x;
 
-        var currentTrackIndex = generatedTracks.FindIndex(track => {
+        currentTrackIndex.Value = generatedTracks.FindIndex(track => {
             var bounds = track.trackBounds();
             return trainNose >= bounds.minXBound && trainNose < bounds.maxXBound;
-        });
-        var tracksToDelete = generatedTracks.Take(Math.Max(currentTrackIndex - trackActivationBuffer, 0)).ToList();
-        var tracksToActivate = generatedTracks.Skip(currentTrackIndex + 1).Take(trackActivationBuffer).ToList();
-        
-        tracksToDelete.ForEach(track => {
-            generatedTracks.Remove(track);
-            Destroy(track);
-        });
-        tracksToActivate.ForEach(track => {
-            track.SetActive(true);
         });
     }
 
@@ -68,7 +76,6 @@ public class LevelGenerator : MonoBehaviour {
         }
         // Get the second-to-last track origin
         endOfTracksetTrigger = generatedTracks.Skip(generatedTracks.Count - 2).First().transform.position.x;
-        generatedTracks.Skip(trackActivationBuffer).ToList().ForEach(track => track.SetActive(false));
     }
 
     private static List<GameObject> GenerateNewTracks(int total, List<GameObject> possibleTracks, Transform parent) {

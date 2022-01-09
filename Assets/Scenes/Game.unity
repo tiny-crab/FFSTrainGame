@@ -1041,10 +1041,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   grid: {fileID: 656632878}
-  trackBufferSize: 6
+  tracksBetweenLandmarks: 3
   numGates: 4
   generatedTracks: []
-  trainRerenderBoundary: 0
+  endOfTracksetTrigger: 0
+  trackActivationBuffer: 3
+  currentTrackIndex:
+    value: 0
 --- !u!114 &1263415302
 MonoBehaviour:
   m_ObjectHideFlags: 0
