@@ -31,6 +31,7 @@ public class LevelGenerator : MonoBehaviour {
         });
 
         currentTrackIndex.Subscribe(newVal => {
+            _datastore.currentTrack.Value = generatedTracks[newVal];
             var tracksToDelete = generatedTracks.Take(Math.Max(newVal - trackActivationBuffer, 0)).ToList();
             var tracksToActivate = generatedTracks.Skip(newVal + 1).Take(trackActivationBuffer).ToList();
             var tracksToDeactivate = generatedTracks.Skip(newVal + 1 + trackActivationBuffer).ToList();
@@ -65,6 +66,7 @@ public class LevelGenerator : MonoBehaviour {
         Enumerable.Range(0, numGates).ToList().ForEach(i => {
             generatedTracks.AddRange(GenerateNewTracks(tracksBetweenLandmarks, _prefabs.tracks, grid.transform));
             generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.gates, grid.transform));
+            generatedTracks.Last().GetComponent<Gate>().speedValue = Enumerable.Range(0, 4).getRandomElement();
         });
         
         generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.stations, grid.transform));

@@ -6,6 +6,7 @@ public class Game : MonoBehaviour {
     private Datastore _datastore;
 
     private GameObject currentStation;
+    private GameObject nextGate;
 
     // Start is called before the first frame update
     void Start() {
@@ -44,6 +45,28 @@ public class Game : MonoBehaviour {
             .Subscribe(_ => {
                 _datastore.score += 30 - (int) Math.Floor(Math.Abs(_datastore.distToNextStation.Value));
                 currentStation = _datastore.nextStation;
+            });
+
+        _datastore.currentTrack
+            .Where(track => track.name.Contains("Gate"))
+            .Subscribe(track => {
+                nextGate = track;
+            });
+
+        Observable.EveryUpdate()
+            .Where(_ => nextGate != null)
+            .Where(_ => {
+                var trainNose = _datastore.train.transform.Find("Nose").position.x;
+                var gateThreshold = _datastore.currentTrack.Value.transform.Find("Stop").position.x;
+                return trainNose >= gateThreshold;
+            })
+            .Subscribe(_ => {
+                var velocityThreshold = _datastore.currentTrack.Value.GetComponent<Gate>().speedValue;
+                Debug.Log($"Train going {_datastore.train.velocity} when passing gate with threshold {velocityThreshold}");
+                if (Math.Abs(_datastore.train.velocity - velocityThreshold) < 0.5) {
+                    _datastore.score++;
+                }
+                nextGate = null;
             });
     }
 }

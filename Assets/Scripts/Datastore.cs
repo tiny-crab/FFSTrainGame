@@ -9,8 +9,11 @@ public class Datastore : MonoBehaviour {
     
     public double throttleValue = 0;
 
+    public MessageBroker events;
+
     public Train train;
     public GameObject nextStation = null;
+    public ReactiveProperty<GameObject> currentTrack = new ReactiveProperty<GameObject>();
     public DoubleReactiveProperty distToNextStation = new DoubleReactiveProperty(Double.MinValue);
     public IntReactiveProperty roundedDistToNextStation = new IntReactiveProperty(0);
 
