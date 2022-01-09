@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UniRx;
@@ -10,10 +11,11 @@ public class LevelGenerator : MonoBehaviour {
 
     public Grid grid;
 
-    public int trackBufferSize = 3;
+    public int tracksBetweenLandmarks = 3;
     public int numGates = 1;
     public List<GameObject> generatedTracks;
-    public double trainRerenderBoundary = 0;
+    public double endOfTracksetTrigger = 0;
+    public int trackActivationBuffer = 3;
 
     public void Start() {
         _prefabs = GetComponent<Prefabs>();
@@ -29,15 +31,31 @@ public class LevelGenerator : MonoBehaviour {
     }
 
     public void Update() {
-        if (_datastore.train.transform.position.x > trainRerenderBoundary) {
-            CleanUpTracks();
+        if (_datastore.train.transform.position.x > endOfTracksetTrigger) {
             CreateNextTrackSet();
         }
+
+        var trainNose = _datastore.train.transform.Find("Nose").position.x;
+
+        var currentTrackIndex = generatedTracks.FindIndex(track => {
+            var bounds = track.trackBounds();
+            return trainNose >= bounds.minXBound && trainNose < bounds.maxXBound;
+        });
+        var tracksToDelete = generatedTracks.Take(Math.Max(currentTrackIndex - trackActivationBuffer, 0)).ToList();
+        var tracksToActivate = generatedTracks.Skip(currentTrackIndex + 1).Take(trackActivationBuffer).ToList();
+        
+        tracksToDelete.ForEach(track => {
+            generatedTracks.Remove(track);
+            Destroy(track);
+        });
+        tracksToActivate.ForEach(track => {
+            track.SetActive(true);
+        });
     }
 
     public void CreateNextTrackSet() {
         Enumerable.Range(0, numGates).ToList().ForEach(i => {
-            generatedTracks.AddRange(GenerateNewTracks(trackBufferSize, _prefabs.tracks, grid.transform));
+            generatedTracks.AddRange(GenerateNewTracks(tracksBetweenLandmarks, _prefabs.tracks, grid.transform));
             generatedTracks.AddRange(GenerateNewTracks(1, _prefabs.gates, grid.transform));
         });
         
@@ -49,16 +67,8 @@ public class LevelGenerator : MonoBehaviour {
             generatedTracks[i].transform.position = nextTrackPositions[i];
         }
         // Get the second-to-last track origin
-        trainRerenderBoundary = generatedTracks.Skip(generatedTracks.Count - 2).First().transform.position.x;
-    }
-
-    public void CleanUpTracks() {
-        // we want to only delete the tracks that are out of view. The train will be on the boundary between the second-to-last
-        // and last tracks at the moment we recycle. So we want to avoid deleting the second-to-last right in front of the player.
-        // TODO could delete and add as the camera moves
-        var tracksToDelete = generatedTracks.Take(generatedTracks.Count - 2).ToList();
-        tracksToDelete.ForEach(Destroy);
-        generatedTracks = generatedTracks.Skip(tracksToDelete.Count).ToList();
+        endOfTracksetTrigger = generatedTracks.Skip(generatedTracks.Count - 2).First().transform.position.x;
+        generatedTracks.Skip(trackActivationBuffer).ToList().ForEach(track => track.SetActive(false));
     }
 
     private static List<GameObject> GenerateNewTracks(int total, List<GameObject> possibleTracks, Transform parent) {

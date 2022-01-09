@@ -15,7 +15,7 @@ public class Game : MonoBehaviour {
             .Where(_ => _datastore.nextStation != null)
             .Subscribe(_ => {
                 var stationStop = _datastore.nextStation.transform.Find("Stop").position.x;
-                var trainStop = _datastore.train.transform.Find("Stop").position.x;
+                var trainStop = _datastore.train.transform.Find("Nose").position.x;
                 _datastore.distToNextStation.Value = stationStop - trainStop;
 
                 if (_datastore.distToNextStation.Value >= 0) {
