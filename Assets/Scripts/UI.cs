@@ -14,11 +14,8 @@ public class UI : MonoBehaviour {
         _datastore = GetComponent<Datastore>();
 
         _trainControlUI = new TrainControlUI {
-            Slider = canvas.transform.Find("Slider").GetComponent<Slider>(),
             DistanceText = canvas.transform.Find("DistanceText").GetComponent<Text>(),
         };
-
-        _trainControlUI.Slider.OnValueChangedAsObservable().Subscribe(newVal => { _datastore.throttleValue = newVal; });
 
         _datastore.distToNextStation.Subscribe(dist => {
             _trainControlUI.DistanceText.text = _datastore.roundedDistToNextStation + "m";

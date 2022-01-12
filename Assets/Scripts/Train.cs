@@ -2,23 +2,39 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using UniRx;
 using UnityEngine;
-using Random = System.Random;
 
 public class Train : MonoBehaviour {
-    Datastore _datastore;
-    
+    private Datastore _datastore;
+
     public double velocity;
-    public double friction = 0.1;
+    public double targetVelocity;
+    public double maxVelocity = 1;
+    public float boostTriggeredTimestamp;
+    public float boostDelta;
 
     public List<GameObject> cars;
     void Start() {
         _datastore = GameObject.Find("Game").GetComponent<Datastore>();
         cars = Enumerable.Range(0, 3).Select(i => transform.Find($"Car{i}").gameObject).ToList();
+
+        _datastore.brake.Subscribe(brakeActive => {
+            if (velocity != 0) return;
+            if (brakeActive) {
+                boostTriggeredTimestamp = Time.time;
+                boostDelta = 0;
+            }
+            else {
+                boostDelta = Time.time - boostTriggeredTimestamp;
+                boostTriggeredTimestamp = 0;
+            }
+        });
     }
 
     void Update() {
-        velocity = CalculateNewVelocity(_datastore.throttleValue, velocity);
+        targetVelocity = maxVelocity * CalculateBoostVelocity(boostDelta);
+        velocity = CalculateNewVelocity();
         transform.position = CalculateNewPosition(velocity, transform.position);
         if (Utils.rng.Next(500) == 0 && velocity > 0.5) {
             RumbleCars();
@@ -40,12 +56,24 @@ public class Train : MonoBehaviour {
         }
     }
 
-    private static double CalculateNewVelocity(double throttleValue, double velocity) {
-        var targetVelocity = throttleValue * 0.2f;
-        return targetVelocity >= velocity
-            // TODO introduce an exponential accel curve here instead of a linear 0.01 accel
-            ? Math.Min(targetVelocity, velocity + 0.01) 
-            : Math.Max(targetVelocity, velocity - 0.01);
+    private double CalculateNewVelocity() {
+        if (_datastore.brake.Value) {
+            return Math.Max(0, velocity - 0.02);
+        }
+
+        var linearAccel = 0.01;
+        if (boostDelta != 0) {
+            linearAccel *= CalculateBoostAcceleration(boostDelta);
+        }
+
+        if (targetVelocity > velocity) {
+            // TODO introduce an exponential accel curve here instead of a linear acceleration value
+            return Math.Min(targetVelocity, velocity + linearAccel);
+        } else {
+            targetVelocity = maxVelocity;
+            boostDelta = 0;
+            return Math.Max(targetVelocity, velocity - 0.01);
+        }
     }
 
     private static Vector3 CalculateNewPosition(double velocity, Vector3 position) {
@@ -54,5 +82,23 @@ public class Train : MonoBehaviour {
             y = position.y,
             z = position.z
         };
+    }
+
+    private static double CalculateBoostAcceleration(float timestampDelta) {
+        // only boost if brake has been held down for more than a second
+        if (timestampDelta < 1) return 1;
+        // clamp boost time to 5 seconds or less
+        var delta = Math.Min(5, timestampDelta);
+        // at one second, delta should yield 5 times acceleration on a diminishing returns curve
+        return Math.Sqrt(delta) * 5;
+    }
+
+    private static double CalculateBoostVelocity(float timestampDelta) {
+        // only boost if brake has been held down for more than a second
+        if (timestampDelta < 1) return 1;
+        // clamp boost time to 5 seconds or less
+        var delta = Math.Min(5, timestampDelta);
+        // at one second, the max velocity should be 1.5 times max velocity on a diminishing returns curve
+        return Math.Sqrt(delta) * 1.5;
     }
 }

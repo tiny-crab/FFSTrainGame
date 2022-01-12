@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Game : MonoBehaviour {
     private Datastore _datastore;
+    private MouseAndKeyboard _mouseAndKeyboard;
 
     private GameObject currentStation;
     private GameObject nextGate;

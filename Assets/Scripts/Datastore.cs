@@ -1,15 +1,13 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UniRx;
 using UnityEngine;
 
 public class Datastore : MonoBehaviour {
     public UnityEngine.Camera mainCamera;
     
-    public double throttleValue = 0;
+    public BoolReactiveProperty brake = new BoolReactiveProperty(); // if brake is being applied
 
-    public MessageBroker events;
+    public MessageBroker inputEvents = new MessageBroker();
 
     public Train train;
     public GameObject nextStation = null;
