@@ -13,7 +13,7 @@ public class Game : MonoBehaviour {
     void Start() {
         _datastore = GetComponent<Datastore>();
 
-        Observable.EveryUpdate()
+        Observable.EveryFixedUpdate()
             .Where(_ => _datastore.nextStation != null)
             .Subscribe(_ => {
                 var stationStop = _datastore.nextStation.transform.Find("Stop").position.x;
@@ -36,6 +36,8 @@ public class Game : MonoBehaviour {
                             break;
                     }
                 }
+
+                _datastore.train.distanceText.text = _datastore.roundedDistToNextStation.Value + "m";
             });
 
         Observable.EveryUpdate()

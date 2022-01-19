@@ -74,3 +74,8 @@ crashlytics-build.properties
 # Mac OSX
 .DS_Store
 .idea/
+
+# Plugins
+Assets/TextMesh\ Pro*
+Assets/ProCamera2D*
+Assets/Gizmos*

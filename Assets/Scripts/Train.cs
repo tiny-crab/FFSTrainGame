@@ -10,13 +10,15 @@ public class Train : MonoBehaviour {
 
     public double velocity;
     public double targetVelocity;
-    public double maxVelocity = 1;
+    public double maxVelocity = 0.25;
     public float boostTriggeredTimestamp;
     public float boostDelta;
 
     public List<GameObject> cars;
+    public TextMesh distanceText;
     void Start() {
         _datastore = GameObject.Find("Game").GetComponent<Datastore>();
+        distanceText = transform.Find("DistanceText").GetComponent<TextMesh>();
         cars = Enumerable.Range(0, 3).Select(i => transform.Find($"Car{i}").gameObject).ToList();
 
         _datastore.brake.Subscribe(brakeActive => {
@@ -32,7 +34,7 @@ public class Train : MonoBehaviour {
         });
     }
 
-    void Update() {
+    void FixedUpdate() {
         targetVelocity = maxVelocity * CalculateBoostVelocity(boostDelta);
         velocity = CalculateNewVelocity();
         transform.position = CalculateNewPosition(velocity, transform.position);
@@ -84,21 +86,21 @@ public class Train : MonoBehaviour {
         };
     }
 
-    private static double CalculateBoostAcceleration(float timestampDelta) {
+    private double CalculateBoostAcceleration(float timestampDelta) {
         // only boost if brake has been held down for more than a second
         if (timestampDelta < 1) return 1;
         // clamp boost time to 5 seconds or less
         var delta = Math.Min(5, timestampDelta);
-        // at one second, delta should yield 5 times acceleration on a diminishing returns curve
-        return Math.Sqrt(delta) * 5;
+        // at one second, delta should yield 3 times acceleration on a diminishing returns curve
+        return Math.Sqrt(delta) * 3;
     }
 
-    private static double CalculateBoostVelocity(float timestampDelta) {
+    private double CalculateBoostVelocity(float timestampDelta) {
         // only boost if brake has been held down for more than a second
-        if (timestampDelta < 1) return 1;
+        if (timestampDelta < 1) return maxVelocity;
         // clamp boost time to 5 seconds or less
         var delta = Math.Min(5, timestampDelta);
         // at one second, the max velocity should be 1.5 times max velocity on a diminishing returns curve
-        return Math.Sqrt(delta) * 1.5;
+        return Math.Sqrt(delta) * 1;
     }
 }
