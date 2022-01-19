@@ -16,9 +16,11 @@ public class Train : MonoBehaviour {
 
     public List<GameObject> cars;
     public TextMesh distanceText;
+    public ParticleSystem brakeSparks;
     void Start() {
         _datastore = GameObject.Find("Game").GetComponent<Datastore>();
         distanceText = transform.Find("DistanceText").GetComponent<TextMesh>();
+        brakeSparks = transform.Find("BrakeSparks").GetComponent<ParticleSystem>();
         cars = Enumerable.Range(0, 3).Select(i => transform.Find($"Car{i}").gameObject).ToList();
 
         _datastore.brake.Subscribe(brakeActive => {
@@ -40,6 +42,10 @@ public class Train : MonoBehaviour {
         transform.position = CalculateNewPosition(velocity, transform.position);
         if (Utils.rng.Next(500) == 0 && velocity > 0.5) {
             RumbleCars();
+        }
+
+        if (_datastore.brake.Value && velocity > 0.2) {
+            brakeSparks.Play();
         }
     }
 
