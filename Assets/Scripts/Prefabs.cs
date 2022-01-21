@@ -11,7 +11,7 @@ public class Prefabs : MonoBehaviour {
 
     public void Awake() {
         stations = Enumerable.Range(0, 1).Select(i => Resources.Load<GameObject>($"Prefabs/Stations/Station{i}")).ToList();
-        tracks = Enumerable.Range(0, 2).Select(i => Resources.Load<GameObject>($"Prefabs/Tracks/Track{i}")).ToList();
+        tracks = Enumerable.Range(0, 1).Select(i => Resources.Load<GameObject>($"Prefabs/Tracks/Track{i}")).ToList();
         gates = Enumerable.Range(0, 1).Select(i => Resources.Load<GameObject>($"Prefabs/Gates/Gate{i}")).ToList();
     }
 }
