@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using UniRx;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -24,11 +22,18 @@ public class Sound : MonoBehaviour {
         ambienceSource.volume = 0.2f;
         ambienceSource.clip = ambienceClips.Single();
         ambienceSource.loop = true;
-        // ambienceSource.Play();
-        //
-        // _datastore.distToNextStation.Subscribe(distance => {
-        //     ambienceSource.volume = 0.2f * (float)((Math.Abs(distance) - 5) / 5);
-        // });
+        ambienceSource.Play();
+    }
+
+    void FixedUpdate() {
+        var distance = Math.Min(_datastore.distFromLastStation.Value, _datastore.distToNextStation.Value);
+        if (distance > 100) {
+            ambienceSource.volume = 0;
+        }
+        else {
+            ambienceSource.volume = (float) (-Math.Min(Math.Abs(distance), 100) + 100) / 100;    
+        }
+        
     }
     
     (AudioSource, List<AudioClip>) loadClips(int numClips, string pathPrefix, string numSuffixLength="D2", int startIndex=1) {

@@ -11,8 +11,10 @@ public class Datastore : MonoBehaviour {
 
     public Train train;
     public GameObject nextStation = null;
+    public Vector3 posOfLastStation = Vector3.negativeInfinity;
     public ReactiveProperty<GameObject> currentTrack = new ReactiveProperty<GameObject>();
     public DoubleReactiveProperty distToNextStation = new DoubleReactiveProperty(Double.MinValue);
+    public DoubleReactiveProperty distFromLastStation = new DoubleReactiveProperty(0);
     public IntReactiveProperty roundedDistToNextStation = new IntReactiveProperty(0);
 
     public int score;

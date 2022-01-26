@@ -40,6 +40,13 @@ public class Game : MonoBehaviour {
                 _datastore.train.distanceText.text = _datastore.roundedDistToNextStation.Value + "m";
             });
 
+        Observable.EveryFixedUpdate()
+            .Where(_ => _datastore.posOfLastStation != Vector3.negativeInfinity)
+            .Subscribe(_ => {
+                var trainStop = _datastore.train.transform.Find("Nose").position.x;
+                _datastore.distFromLastStation.Value = trainStop - _datastore.posOfLastStation.x;
+            });
+
         Observable.EveryUpdate()
             .Where(_ => 
                 _datastore.train.velocity == 0 

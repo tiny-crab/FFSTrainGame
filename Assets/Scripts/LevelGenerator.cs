@@ -27,6 +27,7 @@ public class LevelGenerator : MonoBehaviour {
         _datastore.nextStation = generatedTracks.FindLast(track => track.name.Contains("Station"));
 
         _datastore.distToNextStation.Where(dist => dist <= -15).Subscribe(_ => {
+            _datastore.posOfLastStation = _datastore.nextStation.transform.Find("Stop").position;
             _datastore.nextStation = generatedTracks.FindLast(track => track.name.Contains("Station"));
         });
 
